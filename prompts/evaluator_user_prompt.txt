@@ -1,0 +1,25 @@
+<task>
+Evaluate the following AI-generated outputs for a Crestview Capital Group client application.
+
+Score each dimension from 0-100 using the calibration guide in your system prompt. Provide a specific explanation for every score — you must cite evidence from the outputs to justify your ratings.
+</task>
+
+<client_application>
+{client_application_json}
+</client_application>
+
+{extracted_data_section}
+
+<risk_assessment>
+{risk_assessment_json}
+</risk_assessment>
+
+<onboarding_summary>
+{onboarding_summary_json}
+</onboarding_summary>
+
+<output_schema>
+Respond with a single JSON object matching this exact schema:
+
+{evaluation_schema}
+</output_schema>

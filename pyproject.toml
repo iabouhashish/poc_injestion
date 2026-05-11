@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crestview-onboarding-pipeline"
+version = "0.1.0"
+description = "AI-powered client onboarding pipeline for Crestview Capital Group"
+requires-python = ">=3.11"
+dependencies = [
+    "litellm>=1.40.0",
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.0.0",
+    "pandas>=2.2.0",
+    "requests>=2.31.0",
+    "tenacity>=8.3.0",
+    "rich>=13.7.0",
+    "tabulate>=0.9.0",
+    "sqlmodel>=0.0.18",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["models*", "services*", "src*", "prompts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short"
+log_cli = false
+markers = [
+    "unit: fast unit tests with no I/O",
+    "integration: tests that touch the real filesystem or network",
+]

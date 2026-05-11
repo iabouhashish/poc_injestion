@@ -1,0 +1,46 @@
+<task>
+Generate an actionable onboarding summary for the Crestview Capital Group operations team based on the client application and the completed risk assessment below.
+
+The summary must answer these questions for an ops team member who is seeing this client for the first time:
+1. Who is this client and why are they engaging Crestview?
+2. What investment services do they need and at what scale?
+3. How operationally complex is this onboarding?
+4. What specifically needs to happen next, in what order, and who owns each step?
+5. Are there any blockers that will prevent onboarding from proceeding?
+
+The summary must be GROUNDED IN THE RISK ASSESSMENT — the complexity_level, estimated_onboarding_track, and next_steps must logically derive from the risk context. Do not generate a generic summary independent of the compliance findings.
+</task>
+
+<client_application>
+{client_application_json}
+</client_application>
+
+<risk_assessment>
+{risk_assessment_json}
+</risk_assessment>
+
+<instructions>
+- complexity_level must reflect both operational complexity (number of accounts, entity structures, special requirements) AND compliance complexity (risk level, review track, missing docs).
+- next_steps must be ordered by dependency and priority. If compliance review must complete before operations can proceed, reflect that in the step ordering and depends_on fields.
+- blockers should list anything that will halt onboarding until resolved — missing documentation, pending compliance sign-off, unresolved sanctions flags, etc.
+- estimated_onboarding_track must be consistent with the risk assessment's recommended_review_track.
+  Valid values: fast_track, standard, enhanced_due_diligence, manual_escalation. Map directly:
+    - fast_track → fast_track
+    - standard → standard
+    - enhanced_due_diligence → enhanced_due_diligence
+    - manual_escalation → manual_escalation
+- monday_board_fields.status is Agent 2's compliance determination — choose exactly one:
+    - "In Compliance": due diligence is complete and the client meets all compliance requirements. All required documents are confirmed received, identity verification is complete, no unresolved flags.
+    - "Out Of Compliance": due diligence is complete but the client fails one or more compliance requirements — sanctions hit, confirmed PEP without EDD completion, disqualifying regulatory history, or a structural issue that cannot be resolved by document collection alone.
+    - "Need Information": critical information is missing that prevents completing the compliance review — required documents not submitted, identity unverified for key principals, open questions that must be answered before a determination can be made.
+    Do NOT use "Pending Review", "Approved", "Rejected", or any other value.
+- monday_board_fields.priority must map to the risk level:
+    - low → Low, medium → Medium, high → High, critical → Critical
+- risk_summary must be written for ops — no compliance jargon. Plain language that conveys what the compliance team found and what it means for how we proceed.
+</instructions>
+
+<output_schema>
+Respond with a single JSON object matching this exact schema:
+
+{onboarding_summary_schema}
+</output_schema>

@@ -1,0 +1,15 @@
+.env
+.claude/
+crestview_client_applications.csv
+data/
+data/crestview_pipeline.db
+outputs/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/

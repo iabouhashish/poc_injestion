@@ -1,0 +1,76 @@
+<task>
+Extract structured client data from the following onboarding documents submitted as part of a new client application (Application ID: {application_id}).
+
+Read all documents carefully, cross-reference information across them, and extract every relevant field with a confidence score reflecting how clearly the value is supported by the document evidence.
+</task>
+
+<documents>
+{documents_xml}
+</documents>
+
+<instructions>
+For each field you extract, assign a confidence score from 0.0 to 1.0 using this scale:
+- 0.9–1.0: Value is explicitly and clearly stated in the document with no ambiguity
+- 0.7–0.89: Value is clearly stated but has minor ambiguity (abbreviations, formatting differences, inferred from context with high certainty)
+- 0.5–0.69: Value is implied or can be inferred from context but is not explicitly stated
+- 0.3–0.49: Value is partially present — some information exists but is incomplete or contradictory across documents
+- 0.0–0.29: Value is not present, cannot be reliably extracted, or the available text is too vague to use — set extracted_value to null
+
+For each ExtractionConfidence field:
+- extracted_value: the extracted text value, or null if not found
+- confidence: the 0.0–1.0 score from the scale above
+- source_document: the filename of the document this was extracted from (or "multiple" if cross-referenced)
+- reasoning: one sentence explaining the confidence level — cite the specific language that supports or limits your confidence
+
+Cross-reference across documents: if the application form and a supporting document contradict each other, lower the confidence on both, note the discrepancy in extraction_warnings, and use the value from the more authoritative document (application form > supporting documents > email).
+
+Pay special attention to:
+1. Beneficial ownership — extract every person or entity mentioned as an owner, director, controller, or signatory. Note any roles, percentages, or indicators of PEP status. Each owner is a separate ExtractionConfidence entry.
+2. Source of funds — extract the specific description of where investment capital comes from. Vague phrases like "business activities" or "international trade revenues" should get low confidence (0.3–0.49). Clear documented sources like "proceeds from 2022 business sale, supported by transaction documents" get high confidence.
+3. Missing or blank fields — if the application form has blank fields or "TBD" entries, explicitly note these in extraction_warnings and set confidence to 0.0.
+4. Red flag language — if any document contains language suggesting sanctions risk, PEP status, refusal to disclose, urgency pressure, or complex offshore structures, flag these in extraction_warnings.
+
+For the overall_extraction_confidence: compute a weighted average of all field confidences, weighting required fields (client_name, entity_type, jurisdiction, investment_amount, source_of_funds, beneficial_owners) more heavily.
+
+Respond with a single JSON object. All fields are required. Use null for extracted_value when a field cannot be extracted.
+</instructions>
+
+<worked_example>
+The following shows what high-confidence and low-confidence extractions look like. This is NOT from the current application — it is a calibration reference only.
+
+HIGH CONFIDENCE example (Northern State Pension Fund, clean application):
+{{
+  "client_name": {{
+    "field_name": "client_name",
+    "extracted_value": "Northern State Teachers Pension Fund",
+    "confidence": 0.98,
+    "source_document": "application_form.txt",
+    "reasoning": "Entity legal name is explicitly stated at the top of the application form under 'Client Legal Name' with no ambiguity."
+  }},
+  "source_of_funds": {{
+    "field_name": "source_of_funds",
+    "extracted_value": "Public employee payroll contributions and employer matching contributions, mandated by state statute",
+    "confidence": 0.95,
+    "source_document": "application_form.txt",
+    "reasoning": "Source of funds is explicitly described in the application form and corroborated by the board resolution referencing statutory funding."
+  }}
+}}
+
+LOW CONFIDENCE example (offshore entity, vague application):
+{{
+  "source_of_funds": {{
+    "field_name": "source_of_funds",
+    "extracted_value": "international business activities",
+    "confidence": 0.25,
+    "source_document": "application_form.txt",
+    "reasoning": "The application states only 'international business activities' with no further detail, no supporting documentation, and no identification of specific business lines or counterparties. This is too vague to be a reliable source of funds description."
+  }},
+  "beneficial_owners": []
+}}
+</worked_example>
+
+<output_schema>
+Respond with a single JSON object matching this schema exactly:
+
+{extracted_data_schema}
+</output_schema>

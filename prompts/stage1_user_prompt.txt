@@ -1,0 +1,101 @@
+<task>
+Evaluate the following client application against six mandatory risk dimensions and produce a structured risk assessment.
+
+The six dimensions are:
+1. entity_structure_complexity — How complex is the legal/ownership structure? (layers of holding companies, trusts, multiple entities, nominee directors, etc.)
+2. jurisdiction_risk — What is the FATF/regulatory risk of the client's jurisdiction(s)? (offshore registration, high-risk country exposure, cross-border complexity)
+3. pep_exposure — Are any principals, beneficial owners, or associated parties politically exposed persons (PEPs)?
+4. source_of_funds — How clearly documented and credible is the stated source of investment funds? (vague descriptions, no supporting docs, red flags)
+5. adverse_media_sanctions — Are there any sanctions hits, adverse media mentions, or pre-screening flags in the application or associated parties?
+6. application_completeness — Is the application complete? (missing docs, unanswered questions, refusal to provide standard information)
+
+For EACH dimension:
+- findings: State exactly what the application data says (or fails to say) about this dimension. Be specific — quote or paraphrase actual fields.
+- reasoning: Explain why those findings result in the stated risk_contribution level.
+- risk_contribution: none | low | medium | high
+
+Then synthesize an overall_risk_level and recommended_review_track.
+</task>
+
+{extracted_data_section}
+<client_application>
+{client_application_json}
+</client_application>
+
+<instructions>
+- Base your analysis solely on the data provided. Do not invent information.
+- The description field is the richest source of risk signals — analyze it carefully.
+- estimated_aum should inform proportionality — larger AUM = higher inherent risk from a financial crime perspective.
+- If tool results are available in the conversation (sanctions checks, PEP checks, jurisdiction lookups), incorporate them into the relevant dimensions.
+- Every compliance_flag must be specific and actionable — e.g., "Nominee directors identified — UBO cannot be verified from submitted documents" rather than "ownership concern."
+- missing_information should list concrete items the compliance team should request.
+- Calibrate carefully: a standard US institutional client with full documentation should score low. Reserve critical for genuine red flags (active sanctions match, refusal to provide documents, explicit PEP with no enhanced DD).
+</instructions>
+
+<output_schema>
+Respond with a single JSON object matching this exact schema:
+
+{risk_assessment_schema}
+</output_schema>
+
+<examples>
+Example of a LOW-RISK assessment (calibration reference):
+
+Input: Northern State Teachers Pension Fund — US public pension, full documentation package, board resolution, IPS, authorized signatory list, investment committee approval, 15-year institutional track record, no offshore exposure, source of funds is public employee contributions, estimated AUM $400M.
+
+Expected output structure (abbreviated for illustration):
+{{
+  "client_id": "APP-XXXX-XXXX",
+  "client_name": "Northern State Teachers Pension Fund",
+  "entity_type": "pension_fund",
+  "overall_risk_level": "low",
+  "risk_dimensions": [
+    {{
+      "dimension": "entity_structure_complexity",
+      "risk_contribution": "none",
+      "findings": "Single public pension fund entity. Standard institutional structure with board-authorized investment committee. No subsidiaries or holding layers.",
+      "reasoning": "Public pension funds governed by state statute have legally mandated governance structures and public accountability. No complexity warranting elevated scrutiny."
+    }},
+    {{
+      "dimension": "jurisdiction_risk",
+      "risk_contribution": "none",
+      "findings": "Entity domiciled in the United States. All assets and beneficiaries are domestic.",
+      "reasoning": "US-domiciled public pension fund with no offshore nexus. FATF classification: low-risk jurisdiction."
+    }},
+    {{
+      "dimension": "pep_exposure",
+      "risk_contribution": "none",
+      "findings": "No mention of politically exposed persons among trustees, investment committee members, or authorized signatories.",
+      "reasoning": "Standard public pension governance. Board members are appointed per state statute, not political appointees with enhanced risk profiles."
+    }},
+    {{
+      "dimension": "source_of_funds",
+      "risk_contribution": "none",
+      "findings": "Source of funds is documented public employee payroll contributions and employer matching — a transparent, statutory source.",
+      "reasoning": "Source of funds is clear, documented, and consistent with the entity type. No ambiguity or complexity."
+    }},
+    {{
+      "dimension": "adverse_media_sanctions",
+      "risk_contribution": "none",
+      "findings": "No sanctions hits, adverse media flags, or pre-screening indicators noted in the application or associated parties.",
+      "reasoning": "Clean screening result. No action required."
+    }},
+    {{
+      "dimension": "application_completeness",
+      "risk_contribution": "none",
+      "findings": "Full documentation package received: board resolution, investment policy statement, authorized signatory list, investment committee approval.",
+      "reasoning": "Application is complete. All standard institutional documents are present. No missing information."
+    }}
+  ],
+  "overall_reasoning": "Greenfield State Pension Fund presents a textbook low-risk institutional onboarding. The entity structure is simple and transparent, jurisdiction risk is nil, source of funds is statutory and verifiable, no PEP exposure exists, and the application is complete. Recommend fast-track processing.",
+  "compliance_flags": [],
+  "recommended_review_track": "fast_track",
+  "recommended_review_track_reasoning": "All six risk dimensions score none or low. Full documentation received. No red flags identified. Standard fast-track institutional onboarding is appropriate.",
+  "missing_information": [],
+  "metadata": {{
+    "processed_at": "2026-01-06T10:00:00Z",
+    "pipeline_stage": "stage_1_risk_assessment",
+    "model_used": "anthropic/claude-sonnet-4-6"
+  }}
+}}
+</examples>
