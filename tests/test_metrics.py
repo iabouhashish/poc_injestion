@@ -1,12 +1,11 @@
-"""Tests for the aggregate pipeline metrics computation in main.py."""
+"""Tests for the aggregate pipeline metrics computation in src/metrics.py."""
 from __future__ import annotations
 
-from unittest.mock import patch
 import os
+from unittest.mock import patch
 
 import pytest
 
-# Guard: import main only after env is set (done in conftest.py)
 from tests.conftest import (
     VALID_RISK_ASSESSMENT_DICT,
     VALID_ONBOARDING_SUMMARY_DICT,
@@ -132,17 +131,17 @@ def sample_results():
 
 class TestComputeMetrics:
     def test_total_processed(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.total_applications_processed == 4
 
     def test_failed_count(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=2, pv_failures=[], jf_failures=[])
         assert m.total_applications_failed == 2
 
     def test_risk_distribution_counts(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.risk_distribution["low"] == 1
         assert m.risk_distribution["medium"] == 1
@@ -150,13 +149,13 @@ class TestComputeMetrics:
         assert m.risk_distribution["critical"] == 1
 
     def test_escalation_rate_two_of_four(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         # enhanced_due_diligence + manual_escalation = 2 / 4
         assert m.escalation_rate == pytest.approx(0.5, abs=0.001)
 
     def test_review_track_distribution(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.review_track_distribution["fast_track"] == 1
         assert m.review_track_distribution["standard"] == 1
@@ -164,28 +163,28 @@ class TestComputeMetrics:
         assert m.review_track_distribution["manual_escalation"] == 1
 
     def test_average_risk_assessment_score(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         # Scores: 5, 4, 3, 2 → mean = 3.5
         assert m.average_risk_assessment_score == pytest.approx(3.5, abs=0.01)
 
     def test_average_summary_score(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.average_summary_score == pytest.approx(3.5, abs=0.01)
 
     def test_pydantic_validation_failures(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=["APP-001"], jf_failures=[])
         assert m.pydantic_validation_failures == 1
 
     def test_json_parse_failures(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=["APP-002", "APP-003"])
         assert m.json_parse_failures == 2
 
     def test_compliance_flag_frequency(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         # "Incomplete docs" appears twice, "Offshore structure" appears twice
         freq = m.compliance_flags_frequency
@@ -194,35 +193,35 @@ class TestComputeMetrics:
         assert freq.get("Sanctions match", 0) == 1
 
     def test_missing_information_frequency(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.missing_information_frequency.get("UBO docs", 0) == 1
         assert m.missing_information_frequency.get("Source of funds", 0) == 1
 
     def test_applications_with_critical_issues(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         # Only APP-004 has critical_issues
         assert m.applications_with_critical_issues == 1
 
     def test_stage1_avg_latency(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.stage1_avg_latency_seconds == pytest.approx(10.0, abs=0.01)
 
     def test_stage2_avg_latency(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         assert m.stage2_avg_latency_seconds == pytest.approx(8.0, abs=0.01)
 
     def test_total_tokens_summed(self, sample_results):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         m = compute_metrics(sample_results, failed_count=0, pv_failures=[], jf_failures=[])
         # 4 results × (500 + 400 + 300) = 4800
         assert m.total_estimated_tokens == 4800
 
     def test_zero_results_handled(self):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         # Empty results list should not crash — all averages should be 0
         m = compute_metrics([], failed_count=3, pv_failures=[], jf_failures=[])
         assert m.total_applications_processed == 0
@@ -230,7 +229,7 @@ class TestComputeMetrics:
         assert m.stage1_avg_latency_seconds == 0.0
 
     def test_no_evaluation_results_returns_none_scores(self):
-        from main import compute_metrics
+        from src.metrics import compute_metrics
         from models.pipeline import PipelineResult, PipelineResultMetadata
         from models.client import ClientApplication
         from models.risk import RiskAssessment

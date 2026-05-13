@@ -32,6 +32,40 @@ Then synthesize an overall_risk_level and recommended_review_track.
 - Calibrate carefully: a standard US institutional client with full documentation should score low. Reserve critical for genuine red flags (active sanctions match, refusal to provide documents, explicit PEP with no enhanced DD).
 </instructions>
 
+<thinking_instructions>
+Before producing the JSON, reason through each of the six dimensions explicitly in a <thinking> block.
+This reasoning is visible to the compliance team and must be traceable to the application data.
+
+Format:
+<thinking>
+dimension: entity_structure_complexity
+observations: [what the application data actually says about this dimension]
+conclusion: [why those observations translate to the risk_contribution you will assign]
+
+dimension: jurisdiction_risk
+observations: ...
+conclusion: ...
+
+dimension: pep_exposure
+observations: ...
+conclusion: ...
+
+dimension: source_of_funds
+observations: ...
+conclusion: ...
+
+dimension: adverse_media_sanctions
+observations: ...
+conclusion: ...
+
+dimension: application_completeness
+observations: ...
+conclusion: ...
+</thinking>
+
+Then output the JSON immediately after the closing </thinking> tag.
+</thinking_instructions>
+
 <output_schema>
 Respond with a single JSON object matching this exact schema:
 

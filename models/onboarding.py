@@ -9,7 +9,6 @@ OnboardingTrack = Literal["fast_track", "standard", "enhanced_due_diligence", "m
 MondayStatus = Literal[
     "New", "Processing", "Data Processed", "Ready to Onboard", "Pending Review", "Pending Client",
     "In Compliance", "Out Of Compliance", "Need Information",
-    "Approved", "Rejected",
 ]
 MondayPriority = Literal["Low", "Medium", "High", "Critical"]
 StepOwner = Literal["operations", "compliance", "relationship_manager", "client"]

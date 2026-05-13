@@ -192,6 +192,25 @@ class TestRunStage1:
         finally:
             p._ENABLE_TOOLS = original_enable
 
+    @patch("litellm.completion")
+    def test_on_thinking_callback_called_when_thinking_present(self, mock_completion, low_risk_application):
+        thinking_response = f"<thinking>dim analysis here</thinking>\n{json.dumps(VALID_RISK_ASSESSMENT_DICT)}"
+        mock_completion.return_value = make_llm_response(thinking_response)
+        from src.pipeline import run_stage1
+        captured = []
+        ra, _, _ = run_stage1(low_risk_application, on_thinking=captured.append)
+        assert len(captured) == 1
+        assert "dim analysis" in captured[0]
+        assert isinstance(ra, RiskAssessment)
+
+    @patch("litellm.completion")
+    def test_on_thinking_none_does_not_crash_when_thinking_present(self, mock_completion, low_risk_application):
+        thinking_response = f"<thinking>reasoning block</thinking>\n{json.dumps(VALID_RISK_ASSESSMENT_DICT)}"
+        mock_completion.return_value = make_llm_response(thinking_response)
+        from src.pipeline import run_stage1
+        ra, _, _ = run_stage1(low_risk_application, on_thinking=None)
+        assert isinstance(ra, RiskAssessment)
+
 
 # ── run_stage2 ─────────────────────────────────────────────────────────────────
 

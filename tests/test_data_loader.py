@@ -65,9 +65,9 @@ class TestFixCsvContent:
 # ── load_applications — real CSV ───────────────────────────────────────────────
 
 class TestLoadApplicationsRealCsv:
-    def test_loads_all_fifteen_applications(self):
+    def test_loads_all_applications(self):
         apps = load_applications("crestview_client_applications.csv")
-        assert len(apps) == 15
+        assert len(apps) == 18
 
     def test_all_application_ids_unique(self):
         apps = load_applications("crestview_client_applications.csv")

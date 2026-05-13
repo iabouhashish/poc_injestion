@@ -1,4 +1,4 @@
-.PHONY: help install env phase1 phase2 run test lint clean-outputs clean-db demo-reset clean
+.PHONY: help install env phase1 phase2 run serve test lint clean-outputs clean-db demo-reset clean
 
 PYTHON  := python
 PIP     := pip
@@ -11,12 +11,21 @@ help:
 	@echo ""
 	@echo "Setup"
 	@echo "  make install          Install dependencies from pyproject.toml"
-	@echo "  make env              Copy .env.example → .env (edit before running)"
+	@echo "  make env              Copy .env.example → .env (fill in API keys before running)"
 	@echo ""
-	@echo "Pipeline"
-	@echo "  make phase1           Run Phase 1: document extraction (Agent 1)"
-	@echo "  make phase2           Run Phase 2: compliance review (Agent 2)"
-	@echo "  make run              Shortcut for phase1 (default entry point)"
+	@echo "UI (recommended)"
+	@echo "  make serve            Start the dashboard at http://localhost:8000"
+	@echo "                        Runs the full pipeline (Monday.com, DB, evals, files)"
+	@echo "                        Select a specific application or run all from the UI"
+	@echo ""
+	@echo "CLI (headless / scripted)"
+	@echo "  make phase1           Run Phase 1: document extraction (all applications)"
+	@echo "  make phase2           Run Phase 2: compliance review (all processed applications)"
+	@echo "  make run              Alias for phase1"
+	@echo ""
+	@echo "  # Run a single application:"
+	@echo "  python main.py --phase=1 --client-id=APP-2026-0301"
+	@echo "  python main.py --phase=2 --client-id=APP-2026-0301"
 	@echo ""
 	@echo "Development"
 	@echo "  make test             Run the full test suite"
@@ -27,11 +36,6 @@ help:
 	@echo "  make clean-outputs    Delete the outputs/ directory"
 	@echo "  make clean-db         Delete the SQLite database"
 	@echo "  make clean            Delete outputs/ and the database"
-	@echo ""
-	@echo "Examples"
-	@echo "  make phase1"
-	@echo "  make phase2"
-	@echo "  make demo-reset"
 	@echo ""
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
@@ -54,6 +58,9 @@ phase1:
 
 phase2:
 	$(PYTHON) $(MAIN) --phase=2
+
+serve:
+	PYTHONPATH=. uvicorn api.main:app --reload --port 8000
 
 # ── Development ────────────────────────────────────────────────────────────────
 test:

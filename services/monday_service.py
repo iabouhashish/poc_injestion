@@ -98,6 +98,8 @@ class MondayService:
             return str(value)
         if col_type == "date":
             return {"date": str(value)}
+        if col_type == "long_text":
+            return {"text": str(value)}
         return str(value)
 
     def _set(self, cv: dict, title: str, value) -> None:

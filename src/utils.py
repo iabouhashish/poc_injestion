@@ -13,18 +13,26 @@ T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
 
+def extract_thinking(raw: str) -> str | None:
+    """Extract the <thinking> block content if present, else None."""
+    match = re.search(r"<thinking>(.*?)</thinking>", raw, re.DOTALL)
+    return match.group(1).strip() if match else None
+
+
 def extract_json(raw: str) -> str:
     """
     Extract a JSON object from text that may contain markdown fences or prose.
+    Strips <thinking> blocks first so CoT reasoning doesn't confuse the JSON search.
     Returns the raw string unchanged if no JSON block is detected.
     """
-    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    cleaned = re.sub(r"<thinking>.*?</thinking>", "", raw, flags=re.DOTALL).strip()
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned, re.DOTALL)
     if fenced:
         return fenced.group(1)
-    brace_match = re.search(r"(\{.*\})", raw, re.DOTALL)
+    brace_match = re.search(r"(\{.*\})", cleaned, re.DOTALL)
     if brace_match:
         return brace_match.group(1)
-    return raw
+    return cleaned
 
 
 def retry_with_backoff(

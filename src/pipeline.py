@@ -11,7 +11,7 @@ import logging
 import os
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Callable, Optional
 
 import litellm
 
@@ -20,7 +20,7 @@ from models.extraction import DocumentInput, ExtractedClientData
 from models.risk import RiskAssessment
 from models.onboarding import OnboardingSummary
 from src.tools import TOOL_DEFINITIONS, ToolDispatcher
-from src.utils import extract_json
+from src.utils import extract_json, extract_thinking
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +225,7 @@ def run_stage1(
     tool_dispatcher: Optional[ToolDispatcher] = None,
     pydantic_failures: Optional[list] = None,
     json_failures: Optional[list] = None,
+    on_thinking: Optional[Callable[[str], None]] = None,
 ) -> tuple[RiskAssessment, float, int]:
     """
     Run Stage 1 risk assessment for a single ClientApplication.
@@ -270,6 +271,12 @@ def run_stage1(
         context_label=f"Stage1/{application.application_id}",
     )
     latency = time.time() - t0
+
+    thinking = extract_thinking(raw_content)
+    if thinking:
+        logger.info("[Stage1] Chain-of-thought:\n%s", thinking)
+        if on_thinking is not None:
+            on_thinking(thinking)
 
     # Parse and validate
     try:

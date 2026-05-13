@@ -54,6 +54,7 @@ def write_application_files(
         docs_dir.mkdir(exist_ok=True)
         for doc in source_documents:
             dest = docs_dir / doc.filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
             try:
                 _shutil.copy2(doc.file_path, dest)
             except OSError:
@@ -88,6 +89,7 @@ def write_phase1_files(
         docs_dir.mkdir(exist_ok=True)
         for doc in source_documents:
             dest = docs_dir / doc.filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
             try:
                 _shutil.copy2(doc.file_path, dest)
             except OSError:
