@@ -203,6 +203,46 @@ class MondayService:
         except (KeyError, TypeError):
             return False
 
+    def change_column_value(self, item_id: str, column_title: str, value) -> bool:
+        """Update a single column using change_column_value — more reliable for long_text."""
+        col_id = self._col_id(column_title)
+        if not col_id:
+            logger.warning("[Monday] Column not found on board: '%s' — value not written", column_title)
+            return False
+        col_type = self._col_type(column_title)
+        if col_type == "long_text":
+            value_json = json.dumps({"text": str(value)})
+        elif col_type in ("status", "color", "dropdown"):
+            value_json = json.dumps({"label": str(value)})
+        elif col_type == "date":
+            value_json = json.dumps({"date": str(value)})
+        else:
+            value_json = json.dumps(str(value))
+        query = """
+        mutation ($item_id: ID!, $board_id: ID!, $column_id: String!, $value: JSON!) {
+            change_column_value(
+                item_id: $item_id
+                board_id: $board_id
+                column_id: $column_id
+                value: $value
+            ) { id }
+        }
+        """
+        result = self._execute(query, {
+            "item_id": item_id,
+            "board_id": self.board_id,
+            "column_id": col_id,
+            "value": value_json,
+        })
+        if "error" in result or "errors" in result or "skipped" in result:
+            logger.warning("[Monday] change_column_value failed for '%s': %s", column_title, result)
+            return False
+        try:
+            return result["data"]["change_column_value"]["id"] is not None
+        except (KeyError, TypeError):
+            logger.warning("[Monday] change_column_value unexpected response for '%s': %s", column_title, result)
+            return False
+
     def update_item_status(
         self, item_id: str, status: str, update_text: Optional[str] = None
     ) -> None:

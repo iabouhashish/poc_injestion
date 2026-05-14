@@ -336,7 +336,7 @@ def process_application_phase2(
         except Exception as exc:
             logger.error("[Orchestrator] Routing decision failed for %s: %s", app_id, exc)
         else:
-            if routing.decision == "ESCALATE":
+            if routing.decision:
                 try:
                     from src.reviewer_brief import generate_reviewer_brief
                     brief = generate_reviewer_brief(
@@ -357,9 +357,7 @@ def process_application_phase2(
                             + "\n".join(f"- {s}" for s in brief.suggested_next_steps)
                             + f"\n\n**Regulatory Notes:** {brief.regulatory_notes}"
                         )
-                        cv: dict = {}
-                        monday._set(cv, "Reviewer Brief", brief_md)
-                        submitted = cv and monday.update_item_columns(monday_item_id, cv)
+                        submitted = monday.change_column_value(monday_item_id, "Reviewer Brief", brief_md)
                         if not submitted:
                             monday.add_update(monday_item_id, f"**Reviewer Brief:**\n\n{brief_md}")
                 except Exception as exc:
