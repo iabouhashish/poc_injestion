@@ -359,8 +359,9 @@ def process_application_phase2(
                         )
                         cv: dict = {}
                         monday._set(cv, "Reviewer Brief", brief_md)
-                        if cv:
-                            monday.update_item_columns(monday_item_id, cv)
+                        submitted = cv and monday.update_item_columns(monday_item_id, cv)
+                        if not submitted:
+                            monday.add_update(monday_item_id, f"**Reviewer Brief:**\n\n{brief_md}")
                 except Exception as exc:
                     logger.error("[ReviewerBrief] Failed for %s: %s", app_id, exc, exc_info=True)
                     _ev("error", "reviewer_brief", {"message": f"Reviewer brief generation failed: {exc}"})

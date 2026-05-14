@@ -108,7 +108,7 @@ class MondayService:
         if col_id:
             cv[col_id] = self._format_value(title, value)
         else:
-            logger.debug("[Monday] Column not found on board: '%s'", title)
+            logger.warning("[Monday] Column not found on board: '%s' — value not written", title)
 
     # ------------------------------------------------------------------
     # Item creation
@@ -175,10 +175,10 @@ class MondayService:
     # Item mutation (update existing items)
     # ------------------------------------------------------------------
 
-    def update_item_columns(self, item_id: str, column_values: dict) -> None:
-        """Update column values on an existing board item."""
+    def update_item_columns(self, item_id: str, column_values: dict) -> bool:
+        """Update column values on an existing board item. Returns True on success."""
         if not column_values:
-            return
+            return True
         query = """
         mutation ($item_id: ID!, $board_id: ID!, $column_values: JSON!) {
             change_multiple_column_values(
@@ -188,7 +188,7 @@ class MondayService:
             ) { id }
         }
         """
-        self._execute(
+        result = self._execute(
             query,
             {
                 "item_id": item_id,
@@ -196,6 +196,12 @@ class MondayService:
                 "column_values": json.dumps(column_values),
             },
         )
+        if "error" in result or "errors" in result or "skipped" in result:
+            return False
+        try:
+            return result["data"]["change_multiple_column_values"]["id"] is not None
+        except (KeyError, TypeError):
+            return False
 
     def update_item_status(
         self, item_id: str, status: str, update_text: Optional[str] = None

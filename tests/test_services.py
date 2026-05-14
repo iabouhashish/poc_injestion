@@ -331,3 +331,44 @@ class TestMondayServiceWithMockedRequests:
         )
         assert item_id == "555"
         assert mock_post.call_count == 3  # 1 create + 2 updates
+
+    def test_set_missing_column_does_not_add_to_cv(self):
+        """_set() must not add to cv when the column is absent from the board."""
+        svc = self._make_service()
+        svc._col_map = {}  # board has no columns
+        cv: dict = {}
+        svc._set(cv, "Reviewer Brief", "some text")
+        assert cv == {}, "_set must leave cv empty for unknown columns"
+
+    def test_set_known_column_adds_to_cv(self):
+        """_set() must populate cv when the column is present on the board."""
+        svc = self._make_service()
+        svc._col_map = {"Reviewer Brief": {"id": "col_rb", "type": "long_text"}}
+        cv: dict = {}
+        svc._set(cv, "Reviewer Brief", "some text")
+        assert "col_rb" in cv, "_set must write to cv for known columns"
+        assert cv["col_rb"] == {"text": "some text"}
+
+    @patch("requests.post")
+    def test_update_item_columns_returns_true_on_success(self, mock_post):
+        """update_item_columns must return True when the mutation succeeds."""
+        mock_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"data": {"change_multiple_column_values": {"id": "42"}}},
+        )
+        mock_post.return_value.raise_for_status = lambda: None
+        svc = self._make_service()
+        result = svc.update_item_columns("99", {"col_rb": {"text": "brief"}})
+        assert result is True
+
+    @patch("requests.post")
+    def test_update_item_columns_returns_false_on_graphql_error(self, mock_post):
+        """update_item_columns must return False when the API returns a GraphQL error."""
+        mock_post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"errors": [{"message": "Column value invalid"}]},
+        )
+        mock_post.return_value.raise_for_status = lambda: None
+        svc = self._make_service()
+        result = svc.update_item_columns("99", {"col_rb": {"text": "brief"}})
+        assert result is False
